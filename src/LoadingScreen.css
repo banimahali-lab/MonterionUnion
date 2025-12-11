@@ -4,33 +4,49 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #003366; /* Andes Blue Background */
+    background-color: #003366; /* Andes Blue */
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
 }
 
-.loading-text {
-    font-family: 'Poppins', sans-serif;
-    font-size: 2rem;
-    color: #fca311; /* Gold Text */
-    letter-spacing: 5px;
-    font-weight: bold;
+.loading-content {
     display: flex;
+    flex-direction: column;
     align-items: center;
+    gap: 12px; /* Small gap between icon and bar */
 }
 
-.dot {
-    animation: blink 1.4s infinite both;
-    margin-left: 2px;
+.loading-icon {
+    font-size: 3rem; /* Small, elegant size */
+    color: #fca311; /* Gold */
+    animation: pulseIcon 1.5s infinite ease-in-out;
 }
 
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
+.loading-progress-bar {
+    width: 50px; /* Matches the width of the icon roughly */
+    height: 3px; /* Very sleek line */
+    background-color: rgba(255, 255, 255, 0.15); /* Faint track */
+    border-radius: 10px;
+    overflow: hidden;
+}
 
-@keyframes blink {
-    0% { opacity: 0.2; }
-    20% { opacity: 1; }
-    100% { opacity: 0.2; }
+.loading-progress-fill {
+    height: 100%;
+    background-color: #fca311; /* Gold Fill */
+    width: 0%;
+    animation: fillProgress 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Animations */
+@keyframes pulseIcon {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.95); opacity: 0.85; }
+}
+
+@keyframes fillProgress {
+    0% { width: 0%; transform: translateX(0); }
+    50% { width: 100%; transform: translateX(0); }
+    100% { width: 100%; transform: translateX(100%); }
 }

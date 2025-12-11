@@ -4,9 +4,15 @@ import './LoadingScreen.css';
 const LoadingScreen = () => {
     return (
         <div className="loading-container">
-      <span className="loading-text">
-        LOADING<span className="dot">.</span><span className="dot">.</span><span className="dot">.</span>
-      </span>
+            <div className="loading-content">
+                {/* Bank Icon */}
+                <i className="fas fa-mountain loading-icon"></i>
+
+                {/* Small Progress Bar */}
+                <div className="loading-progress-bar">
+                    <div className="loading-progress-fill"></div>
+                </div>
+            </div>
         </div>
     );
 };
