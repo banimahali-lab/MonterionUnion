@@ -18,8 +18,11 @@ export default function UserDashboard({ user, goToHome, onLogout, onCreditCardRe
     const [isCardFlipped, setIsCardFlipped] = useState(false);
     const [transferTab, setTransferTab] = useState('andes');
 
-    // --- Toast State (Red & Grey) ---
-    const [toast, setToast] = useState({ msg: '', type: '' }); // type: 'error' (red) or 'info' (grey)
+    // --- NEW: Toggle Account Number Visibility ---
+    const [showFullAccount, setShowFullAccount] = useState(false);
+
+    // --- Toast State ---
+    const [toast, setToast] = useState({ msg: '', type: '' });
 
     // --- Chatbot States ---
     const [showChat, setShowChat] = useState(false);
@@ -36,36 +39,45 @@ export default function UserDashboard({ user, goToHome, onLogout, onCreditCardRe
     }, [chatStep, showChat]);
 
     // --- HELPERS ---
+
+    // 1. DYNAMIC ACCOUNT NUMBER LOGIC (1100 + Alphabet Index)
+    const getCalculatedAccountNumber = () => {
+        if (!data || !data.name) return "0000000000";
+        // Get first name, lowercase, remove special chars
+        const firstName = data.name.split(' ')[0].toLowerCase().replace(/[^a-z]/g, '');
+        let accNum = "1100";
+        for (let i = 0; i < firstName.length; i++) {
+            accNum += (firstName.charCodeAt(i) - 96); // a=1, b=2, etc.
+        }
+        return accNum;
+    };
+
+    const calculatedAccNum = getCalculatedAccountNumber();
+    // Mask logic: Show only last 4 if locked, else show full
+    const displayAccNum = showFullAccount
+        ? calculatedAccNum
+        : `**** ${calculatedAccNum.slice(-4)}`;
+
+
     const showToast = (msg, type = 'error') => {
         setToast({ msg, type });
         setTimeout(() => setToast({ msg: '', type: '' }), 4000);
     };
 
-    const handleApplyCard = () => {
-        showToast("Saldo insuficiente para solicitar nueva tarjeta.", 'error');
-    };
-
-    const handleMaintenance = () => {
-        showToast("Sistema en mantenimiento. Intente más tarde.", 'info');
-    };
-
+    const handleApplyCard = () => showToast("Saldo insuficiente para solicitar nueva tarjeta.", 'error');
+    const handleMaintenance = () => showToast("Sistema en mantenimiento. Intente más tarde.", 'info');
     const handleStatementClick = () => setShowDateSelect(true);
-
     const onDateSelected = () => {
         setShowDateSelect(false);
         showToast("Tu cuenta es muy reciente. Espera unos días para usar este servicio.", 'error');
     };
-
-    const handleTransferSubmit = () => {
-        showToast("Saldo insuficiente para realizar esta operación.", 'error');
-    };
-
+    const handleTransferSubmit = () => showToast("Saldo insuficiente para realizar esta operación.", 'error');
     const handleBlockSubmit = () => {
         setShowBlockModal(false);
-        showToast("Solicitud procesada. Recibirá una confirmación pronto.", 'info'); // Grey/Info toast for success
+        showToast("Solicitud procesada. Recibirá una confirmación pronto.", 'info');
     };
 
-    // --- CHATBOT CONTENT (Same as before) ---
+    // --- CHATBOT CONTENT ---
     const resetChat = () => { setChatStep('init'); setSelectedTx(null); };
     const renderChatContent = () => {
         switch (chatStep) {
@@ -146,7 +158,6 @@ export default function UserDashboard({ user, goToHome, onLogout, onCreditCardRe
     return (
         <div className="dashboard-layout">
 
-            {/* --- GLOBAL TOAST (Red or Grey) --- */}
             {toast.msg && (
                 <div className={`toast-notification ${toast.type} animate-slide-up`}>
                     <i className={`fas ${toast.type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}`}></i>
@@ -192,18 +203,26 @@ export default function UserDashboard({ user, goToHome, onLogout, onCreditCardRe
 
                 {/* Account Cards */}
                 <div className="account-cards-grid">
-                    <div className="bank-card gold-card animate-slide-up">
+                    {/* --- GOLD CARD: SAVINGS (Now Clickable to Toggle Number) --- */}
+                    <div className="bank-card gold-card animate-slide-up"
+                         onClick={() => setShowFullAccount(!showFullAccount)}
+                         style={{cursor: 'pointer'}}>
                         <div className="card-top"><span></span> <i className="fas fa-wifi"></i></div>
                         <div className="card-balance">
                             <small className="desktop-only">Saldo Disponible</small>
                             <h3>S/ {data.bankBalance.toFixed(2)}</h3>
                         </div>
-                        <div className="card-bottom"><span>**** {data.accountNumber.slice(-4)}</span><span>{data.name.toUpperCase()}</span></div>
+                        <div className="card-bottom">
+                            {/* Shows dynamically calculated number */}
+                            <span style={{fontFamily: 'monospace', fontSize: '1.1rem'}}>{displayAccNum}</span>
+                            <span>{data.name.toUpperCase()}</span>
+                        </div>
                     </div>
 
+                    {/* --- BLUE CARD: VISA (Full Number Visible Here) --- */}
                     <div className="bank-card blue-card animate-slide-up delay-1" onClick={() => setShowCardModal(true)} style={{cursor:'pointer'}}>
                         <div className="card-top"><span>Visa Débito</span> <i className="fab fa-cc-visa fa-lg"></i></div>
-                        <div className="card-number">**** **** **** 3027</div>
+                        <div className="card-number" style={{letterSpacing: '3px'}}>4832 9320 0052 3027</div>
                         <div className="card-bottom"><span>06/32</span> <span>CVV ***</span></div>
                     </div>
                 </div>
@@ -213,10 +232,10 @@ export default function UserDashboard({ user, goToHome, onLogout, onCreditCardRe
                     <h3 className="section-title-sm">Operaciones</h3>
                     <div className="action-buttons">
                         <button className="action-btn" onClick={() => setShowTransferModal(true)}>
-                            <div className="icon-box"><i className="fas fa-exchange-alt"></i></div> {/* FIXED ICON */}
+                            <div className="icon-box"><i className="fas fa-exchange-alt"></i></div>
                             <span>Transferir</span>
                         </button>
-                        <button className="action-btn" onClick={handleMaintenance}> {/* Maintenance Toast */}
+                        <button className="action-btn" onClick={handleMaintenance}>
                             <div className="icon-box"><i className="fas fa-file-invoice-dollar"></i></div>
                             <span>Pago Serv.</span>
                         </button>
@@ -265,8 +284,8 @@ export default function UserDashboard({ user, goToHome, onLogout, onCreditCardRe
                                 <div className="flip-card-inner">
                                     <div className="flip-card-front blue-card">
                                         <div className="card-top"><span>Visa Débito</span> <i className="fab fa-cc-visa fa-lg"></i></div>
-                                        {/* STATIC INFO MASKED */}
-                                        <div className="card-number">**** **** **** 3027</div>
+                                        {/* FULL STATIC NUMBER VISIBLE */}
+                                        <div className="card-number" style={{letterSpacing: '2px', fontSize: '1.2rem'}}>4832 9320 0052 3027</div>
                                         <div className="card-bottom"><span>06/32</span><span>{data.name.toUpperCase()}</span></div>
                                     </div>
                                     <div className="flip-card-back">
@@ -349,7 +368,7 @@ export default function UserDashboard({ user, goToHome, onLogout, onCreditCardRe
                 </div>
             )}
 
-            {/* 4. TRANSFER MODAL (Fixed Fields) */}
+            {/* 4. TRANSFER MODAL */}
             {showTransferModal && (
                 <div className="fullscreen-modal animate-slide-up-full">
                     <div className="modal-header">
