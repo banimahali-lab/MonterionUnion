@@ -1,10 +1,14 @@
 import React from 'react';
-export default function LoadingScreen() {
+import './LoadingScreen.css';
+
+const LoadingScreen = () => {
     return (
-        <div className="loading-overlay">
-            <div className="spinner"><i className="fas fa-mountain"></i></div>
-            <h2>ANDES PRIME BANK</h2>
-            <div className="progress-bar"><div className="fill"></div></div>
+        <div className="loading-container">
+      <span className="loading-text">
+        LOADING<span className="dot">.</span><span className="dot">.</span><span className="dot">.</span>
+      </span>
         </div>
     );
-}
+};
+
+export default LoadingScreen;
