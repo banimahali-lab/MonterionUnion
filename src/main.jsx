@@ -11,7 +11,7 @@ import RegistrationPortal from './OpenAccount';
 import ProfileBuilder from './ProfileBuilder';
 import ContactUs from './ContactUs';
 import CreditCardRejection from './CreditCardRejection';
-import LoadingScreen from './LoadingScreen'; // Import the new loader
+import LoadingScreen from './LoadingScreen';
 import './index.css';
 
 const checkProfileStatus = async (user) => {
@@ -25,88 +25,72 @@ const checkProfileStatus = async (user) => {
 function MainRouter() {
     const [view, setView] = useState('home');
     const [currentUser, setCurrentUser] = useState(null);
-
-    // Start with loading TRUE so the very first reload shows the screen
     const [isLoading, setIsLoading] = useState(true);
 
-    // --- Navigation Wrapper (Smooth Transition) ---
-    // Every time we click a menu item, this runs
     const nav = (newView) => {
-        setIsLoading(true); // Show loader
+        setIsLoading(true);
         window.scrollTo(0,0);
-
-        // Wait 1.2 seconds for the animation to play, then switch view
         setTimeout(() => {
             setView(newView);
-            setIsLoading(false); // Hide loader
+            setIsLoading(false);
         }, 1200);
     };
 
-    // --- Login Logic (Specific Request) ---
-    // Only triggers AFTER Firebase confirms credentials are correct
     const handleLoginSuccess = (user) => {
         setCurrentUser(user);
-        setIsLoading(true); // Show loader immediately after login success
-
-        // Longer delay (2s) for Login to make it feel like "processing" data
+        setIsLoading(true);
         setTimeout(async () => {
             const isComplete = await checkProfileStatus(user);
             setView(isComplete ? 'dashboard' : 'profileBuilder');
-            setIsLoading(false); // Reveal Dashboard
+            setIsLoading(false);
         }, 2000);
     };
 
-    // --- Initial Load Logic ---
     useEffect(() => {
+        // --- LOGOUT ON REFRESH LOGIC ---
+        // Check if the page was loaded via a "Reload" action
+        const entries = performance.getEntriesByType("navigation");
+        if (entries.length > 0 && entries[0].type === 'reload') {
+            console.log("Reload detected - Force Logout");
+            signOut(auth);
+            setIsLoading(false);
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            // Keep loader visible while we check session
             setIsLoading(true);
 
+            // SECURITY: If session storage flag is missing (deleted on tab close), logout.
             const isSessionActive = sessionStorage.getItem('andes_session_active');
 
-            if (user) {
-                if (!isSessionActive) {
-                    await signOut(auth);
-                    setCurrentUser(null);
-                    setView('home');
-                } else {
-                    const isComplete = await checkProfileStatus(user);
-                    setCurrentUser(user);
-                    setView(isComplete ? 'dashboard' : 'profileBuilder');
-                }
+            if (user && isSessionActive) {
+                const isComplete = await checkProfileStatus(user);
+                setCurrentUser(user);
+                setView(isComplete ? 'dashboard' : 'profileBuilder');
             } else {
+                if (user) await signOut(auth); // Ensure full cleanup
                 setCurrentUser(null);
-                if (view !== 'rejection' && view !== 'contact' && view !== 'openAccount') {
+                if (['login', 'dashboard', 'profileBuilder'].includes(view)) {
                     setView('home');
                 }
             }
-
-            // Turn off loader after initial checks are done
             setTimeout(() => setIsLoading(false), 1500);
         });
         return () => unsubscribe();
     }, []);
 
     const handleLogout = async () => {
-        setIsLoading(true); // Show loader during logout
+        setIsLoading(true);
         sessionStorage.removeItem('andes_session_active');
         await signOut(auth);
-        setTimeout(() => {
-            nav('home'); // nav() will handle the turning off of loading
-        }, 1000);
+        setTimeout(() => nav('home'), 1000);
     };
 
-    // --- RENDER ---
-
-    // If loading is true, ONLY show the loading screen (overlays everything)
     if (isLoading) return <LoadingScreen />;
 
-    // View Routing
     if (view === 'rejection') return <CreditCardRejection goToHome={() => nav('home')} />;
     if (view === 'contact') return <ContactUs goToHome={() => nav('home')} goToLogin={() => nav('login')} />;
     if (view === 'openAccount') return <RegistrationPortal goToHome={() => nav('home')} goToLogin={() => nav('login')} goToProfileBuilder={() => nav('profileBuilder')} />;
-
-    // Pass handleLoginSuccess instead of standard nav
     if (view === 'login') return <LoginPortal goToHome={() => nav('home')} onLogin={handleLoginSuccess} goToContact={() => nav('contact')} />;
 
     if (currentUser) {
