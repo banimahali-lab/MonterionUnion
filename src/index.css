@@ -688,3 +688,50 @@ body { top: 0 !important; position: static !important; }
     box-shadow: 0 5px 15px rgba(211, 47, 47, 0.4);
     display: flex; align-items: center; gap: 10px; width: 90%; max-width: 400px;
 }
+/* --- TRANSFER MODAL STYLES --- */
+.transfer-tabs {
+    display: flex;
+    background: #eef2f6;
+    padding: 5px;
+    border-radius: var(--radius-md);
+    margin-bottom: 25px;
+}
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: #666;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+.tab-btn.active {
+    background: white;
+    color: var(--blue);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.input-group { margin-bottom: 15px; }
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.dash-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+.dash-input:focus {
+    border-color: var(--blue);
+    outline: none;
+}
