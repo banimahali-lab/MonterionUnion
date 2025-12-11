@@ -448,3 +448,155 @@ button { font-family: 'Poppins', sans-serif; }
     height: 0 !important;
 }
 body { top: 0 !important; position: static !important; }
+/* --- OPEN ACCOUNT / REGISTRATION STYLES --- */
+.wide-box {
+    max-width: 600px; /* Wider than login box for complex form */
+}
+
+.form-title {
+    color: var(--blue);
+    margin-bottom: 5px;
+    text-align: center;
+}
+.form-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 0.9rem;
+}
+
+.form-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed #ddd;
+}
+.form-section h3 {
+    font-size: 1rem;
+    color: var(--gold-hover);
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+/* Row inputs (Name / Middle Name) */
+.input-group-row {
+    display: flex;
+    gap: 15px;
+}
+.input-group-row input {
+    flex: 1;
+}
+
+/* Verification Row (Input + Button) */
+.verify-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.verify-row .input-wrapper {
+    flex: 1;
+    position: relative;
+}
+.input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--blue);
+    z-index: 10;
+}
+.input-field.has-icon {
+    padding-left: 35px;
+    margin-bottom: 0; /* Remove default margin for alignment */
+}
+
+.btn-verify {
+    background: var(--blue);
+    color: white;
+    border: none;
+    padding: 12px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+.btn-verify:hover {
+    background: var(--dark-blue);
+}
+
+.badge-success {
+    color: #2e7d32;
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+/* OTP 6-Box Grid */
+.otp-container {
+    background: #f8fbff;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #eef4ff;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.otp-container p {
+    font-size: 0.8rem;
+    color: #666;
+    margin: 0 0 10px;
+}
+
+.otp-grid {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.otp-box {
+    width: 40px;
+    height: 45px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--blue);
+    background: white;
+    transition: all 0.2s;
+}
+.otp-box:focus {
+    border-color: var(--gold);
+    outline: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(252, 163, 17, 0.2);
+}
+
+.mt-2 { margin-top: 15px; }
+.mt-3 { margin-top: 25px; }
+
+/* Error Message */
+.error-msg {
+    color: #d32f2f;
+    background: #ffebee;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+    .input-group-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .otp-box {
+        width: 35px;
+        height: 40px;
+    }
+}
