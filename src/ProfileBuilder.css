@@ -1,0 +1,18 @@
+/* --- Form Mobile Breakpoint (Max Width 576px) --- */
+@media (max-width: 576px) {
+
+    /* Form Grid Collapse (e.g., Step 2 inputs for phone/DNI) */
+    .form-group-grid {
+        grid-template-columns: 1fr !important; /* Single column */
+    }
+
+    /* Ensure form buttons are full width */
+    .navigation-buttons {
+        flex-direction: column;
+    }
+
+    .navigation-buttons button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
