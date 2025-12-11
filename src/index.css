@@ -735,3 +735,194 @@ body { top: 0 !important; position: static !important; }
     border-color: var(--blue);
     outline: none;
 }
+/* --- CARD MANAGEMENT MODAL --- */
+.card-manage-body {
+    background: #f0f4f8;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Horizontal Carousel */
+.cards-carousel {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    scroll-snap-type: x mandatory;
+    margin: 0 -20px; /* Bleed to edge */
+    padding: 20px; /* Internal padding */
+}
+
+/* FLIP CARD LOGIC */
+.flip-card-container {
+    width: 320px;
+    height: 200px;
+    perspective: 1000px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    cursor: pointer;
+}
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    border-radius: var(--radius-lg);
+}
+.flip-card-container.flipped .flip-card-inner {
+    transform: rotateY(180deg);
+}
+.flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.flip-card-front {
+    /* Blue Card Gradient inherited from .blue-card */
+    padding: 25px;
+    color: white;
+}
+.flip-card-back {
+    background: #1a1a1a;
+    color: white;
+    transform: rotateY(180deg);
+    padding: 20px 0;
+    align-items: center;
+    justify-content: center;
+}
+.magnetic-strip {
+    background: #333;
+    width: 100%;
+    height: 40px;
+    margin-top: 20px;
+}
+.cvv-strip {
+    background: white;
+    color: black;
+    width: 80%;
+    padding: 5px;
+    text-align: right;
+    font-family: monospace;
+    margin: 10px 0;
+}
+.card-help-text { font-size: 0.7rem; opacity: 0.6; }
+
+/* ADD CARD PLACEHOLDER */
+.add-card-placeholder {
+    width: 320px;
+    height: 200px;
+    flex-shrink: 0;
+    border: 2px dashed #ccc;
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #888;
+    gap: 10px;
+    scroll-snap-align: center;
+}
+.add-btn-circle {
+    width: 50px; height: 50px; background: #e0e0e0;
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+}
+
+/* MANAGE OPTIONS GRID */
+.manage-options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+.manage-option-item {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow-soft);
+    cursor: pointer;
+}
+.manage-icon {
+    width: 45px; height: 45px;
+    background: #eef4ff;
+    color: var(--blue);
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 1.2rem;
+}
+
+/* --- CHATBOT OVERLAY --- */
+.chat-overlay {
+    position: fixed;
+    bottom: 0; left: 0; right: 0; top: 20%; /* Covers bottom 80% */
+    background: white;
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+    display: flex; flex-direction: column;
+    z-index: 3000;
+}
+.chat-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.bot-profile { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--blue); }
+.bot-avatar {
+    width: 35px; height: 35px; background: var(--blue); color: var(--gold);
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+}
+.chat-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Chat Messages & Buttons */
+.bot-msg {
+    background: #f0f2f5;
+    padding: 12px 18px;
+    border-radius: 15px;
+    border-top-left-radius: 2px;
+    max-width: 85%;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin: 0;
+}
+.chat-options { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.chat-options button, .chat-back-btn {
+    background: white; border: 1px solid var(--blue); color: var(--blue);
+    padding: 10px 15px; border-radius: 20px; cursor: pointer;
+    font-weight: 500; font-size: 0.9rem; transition: all 0.2s;
+}
+.chat-options button:hover { background: var(--blue); color: white; }
+
+.contact-card-chat {
+    background: #e3f2fd; color: var(--blue); padding: 15px;
+    border-radius: 10px; display: flex; gap: 10px; align-items: center; margin: 10px 0;
+}
+.static-id-box {
+    background: #333; color: #0f0; font-family: monospace;
+    padding: 10px; border-radius: 5px; text-align: center; margin: 10px 0;
+}
+.chat-form textarea {
+    width: 100%; border: 1px solid #ccc; border-radius: 10px; padding: 10px; margin: 10px 0;
+    font-family: inherit;
+}
+.success-icon-chat { font-size: 3rem; color: #2e7d32; display: block; text-align: center; margin-bottom: 10px; }
