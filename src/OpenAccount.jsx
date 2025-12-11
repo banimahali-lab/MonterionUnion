@@ -1,10 +1,21 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimpleHeader, SimpleFooter } from './App';
 import { auth, db } from './firebaseConfig';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 
 export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBuilder }) {
+    // --- 1. Location Permission Trigger ---
+    useEffect(() => {
+        // Request location immediately for "Security Theater"
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => console.log("Location access granted"),
+                (error) => console.log("Location access denied")
+            );
+        }
+    }, []);
+
     // --- Form States ---
     const [formData, setFormData] = useState({
         firstName: '', middleName: '', lastName: '',
@@ -16,7 +27,7 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
     const [phoneStep, setPhoneStep] = useState('idle'); // idle, sent, verified
     const [emailStep, setEmailStep] = useState('idle'); // idle, sent, verified
 
-    // OTP Inputs (Arrays for 6 boxes)
+    // OTP Inputs
     const [phoneOtp, setPhoneOtp] = useState(new Array(6).fill(""));
     const [emailOtp, setEmailOtp] = useState(new Array(6).fill(""));
 
@@ -24,25 +35,39 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
     const [loading, setLoading] = useState(false);
 
     // --- Helpers ---
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = (e) => {
+        // Enforce numeric input for DNI and Phone
+        if ((e.target.name === 'dni' || e.target.name === 'phone') && isNaN(e.target.value)) return;
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-    // Generate Random Bank Account
     const generateAccountDetails = () => ({
         accountNumber: '191-' + Math.floor(10000000 + Math.random() * 90000000),
         bankBalance: 0.00,
-        profileComplete: true // Since we collect all data here, profile is complete
+        profileComplete: true
     });
 
-    // --- OTP Handling ---
     const STATIC_PIN = "824364";
 
+    // --- Validation & OTP Sending ---
     const handleSendOtp = (type) => {
-        if (type === 'phone' && !formData.phone) return setError("Ingrese un número de celular.");
-        if (type === 'email' && !formData.email) return setError("Ingrese un correo electrónico.");
         setError('');
 
-        if (type === 'phone') setPhoneStep('sent');
-        if (type === 'email') setEmailStep('sent');
+        if (type === 'phone') {
+            // PERU PHONE REGEX: Starts with 9, exactly 9 digits
+            const phoneRegex = /^9\d{8}$/;
+            if (!phoneRegex.test(formData.phone)) {
+                return setError("Número inválido. Debe ser un celular de Perú (9 dígitos, empieza con 9).");
+            }
+            setPhoneStep('sent');
+        }
+
+        if (type === 'email') {
+            if (!formData.email.includes('@') || !formData.email.includes('.')) {
+                return setError("Ingrese un correo electrónico válido.");
+            }
+            setEmailStep('sent');
+        }
     };
 
     const handleOtpChange = (element, index, type) => {
@@ -54,25 +79,30 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
         if (type === 'phone') setPhoneOtp(newOtp);
         else setEmailOtp(newOtp);
 
-        // Auto-focus next box
+        // Focus Next
         if (element.nextSibling && element.value) {
             element.nextSibling.focus();
         }
 
-        // Auto-Verify Check
+        // Auto-Verify
         const code = newOtp.join("");
         if (code.length === 6) {
             if (code === STATIC_PIN) {
                 if (type === 'phone') setPhoneStep('verified');
                 else setEmailStep('verified');
+                setError(''); // Clear errors on success
             } else {
-                setError(`Código ${type === 'phone' ? 'SMS' : 'Email'} incorrecto.`);
+                setError(`Código incorrecto.`);
             }
         }
     };
 
     // --- Final Registration ---
     const handleSubmit = async () => {
+        // PERU DNI REGEX: Exactly 8 digits
+        const dniRegex = /^\d{8}$/;
+        if (!dniRegex.test(formData.dni)) return setError("El DNI debe tener exactamente 8 dígitos.");
+
         if (formData.password !== formData.confirmPass) return setError("Las contraseñas no coinciden.");
         if (formData.password.length < 6) return setError("La contraseña debe tener 6 caracteres o más.");
 
@@ -80,7 +110,6 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
         try {
             const { user } = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
-            // Save extended data to Firestore
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 name: `${formData.firstName} ${formData.middleName} ${formData.lastName}`.trim(),
@@ -93,8 +122,7 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
             });
 
             setLoading(false);
-            // If main.jsx logic checks 'profileComplete', this user will go straight to dashboard
-            goToLogin(); // Redirect to login to force a fresh session start
+            goToLogin();
         } catch (err) {
             setLoading(false);
             if(err.code === 'auth/email-already-in-use') setError("Este correo ya está registrado.");
@@ -120,7 +148,8 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
                         <input name="lastName" placeholder="Apellidos" className="input-field" onChange={handleChange} />
 
                         <div className="input-group-row">
-                            <input name="dni" placeholder="Número de DNI" maxLength={8} className="input-field" onChange={handleChange} />
+                            {/* Updated Placeholder for DNI */}
+                            <input name="dni" placeholder="DNI (Documento Nacional de Identidad)" maxLength={8} className="input-field" onChange={handleChange} />
                             <input name="dob" type="date" className="input-field" onChange={handleChange} title="Fecha de Nacimiento" />
                         </div>
                     </div>
@@ -133,7 +162,7 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
                         <div className="verify-row">
                             <div className="input-wrapper">
                                 <i className="fas fa-mobile-alt input-icon"></i>
-                                <input name="phone" placeholder="Celular" className="input-field has-icon"
+                                <input name="phone" placeholder="Celular (9 dígitos)" maxLength={9} className="input-field has-icon"
                                        onChange={handleChange} disabled={phoneStep === 'verified'} />
                             </div>
                             {phoneStep === 'idle' && (
@@ -142,10 +171,9 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
                             {phoneStep === 'verified' && <span className="badge-success"><i className="fas fa-check"></i> Verificado</span>}
                         </div>
 
-                        {/* Phone OTP Boxes */}
+                        {/* Phone OTP Boxes (Hidden Label) */}
                         {phoneStep === 'sent' && (
                             <div className="otp-container animate-slide-up">
-                                <p>Ingrese código SMS (824364):</p>
                                 <div className="otp-grid">
                                     {phoneOtp.map((data, index) => (
                                         <input key={index} type="text" maxLength="1"
@@ -153,44 +181,47 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
                                                value={data}
                                                onChange={e => handleOtpChange(e.target, index, 'phone')}
                                                onFocus={e => e.target.select()}
+                                               placeholder="•"
                                         />
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* Email Verification */}
-                        <div className="verify-row mt-2">
-                            <div className="input-wrapper">
-                                <i className="fas fa-envelope input-icon"></i>
-                                <input name="email" placeholder="Correo Electrónico" className="input-field has-icon"
-                                       onChange={handleChange} disabled={emailStep === 'verified'} />
+                        {/* Email Verification - LOCKED until phone verified */}
+                        <div className={`email-section-wrapper ${phoneStep !== 'verified' ? 'disabled-section' : ''}`}>
+                            <div className="verify-row mt-2">
+                                <div className="input-wrapper">
+                                    <i className="fas fa-envelope input-icon"></i>
+                                    <input name="email" placeholder="Correo Electrónico" className="input-field has-icon"
+                                           onChange={handleChange} disabled={emailStep === 'verified' || phoneStep !== 'verified'} />
+                                </div>
+                                {emailStep === 'idle' && (
+                                    <button className="btn-verify" onClick={() => handleSendOtp('email')} disabled={phoneStep !== 'verified'}>Enviar OTP</button>
+                                )}
+                                {emailStep === 'verified' && <span className="badge-success"><i className="fas fa-check"></i> Verificado</span>}
                             </div>
-                            {emailStep === 'idle' && (
-                                <button className="btn-verify" onClick={() => handleSendOtp('email')}>Enviar OTP</button>
+
+                            {/* Email OTP Boxes (Hidden Label) */}
+                            {emailStep === 'sent' && (
+                                <div className="otp-container animate-slide-up">
+                                    <div className="otp-grid">
+                                        {emailOtp.map((data, index) => (
+                                            <input key={index} type="text" maxLength="1"
+                                                   className="otp-box"
+                                                   value={data}
+                                                   onChange={e => handleOtpChange(e.target, index, 'email')}
+                                                   onFocus={e => e.target.select()}
+                                                   placeholder="•"
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
                             )}
-                            {emailStep === 'verified' && <span className="badge-success"><i className="fas fa-check"></i> Verificado</span>}
                         </div>
-
-                        {/* Email OTP Boxes */}
-                        {emailStep === 'sent' && (
-                            <div className="otp-container animate-slide-up">
-                                <p>Ingrese código Email (824364):</p>
-                                <div className="otp-grid">
-                                    {emailOtp.map((data, index) => (
-                                        <input key={index} type="text" maxLength="1"
-                                               className="otp-box"
-                                               value={data}
-                                               onChange={e => handleOtpChange(e.target, index, 'email')}
-                                               onFocus={e => e.target.select()}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
 
-                    {/* --- Password Section (Hidden until verified) --- */}
+                    {/* --- Password Section (Hidden until BOTH verified) --- */}
                     {phoneStep === 'verified' && emailStep === 'verified' && (
                         <div className="form-section animate-slide-up">
                             <h3>3. Seguridad</h3>

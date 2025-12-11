@@ -600,3 +600,17 @@ body { top: 0 !important; position: static !important; }
         height: 40px;
     }
 }
+/* --- DISABLED STATE FOR EMAIL SECTION --- */
+.disabled-section {
+    opacity: 0.5;
+    pointer-events: none; /* Disables clicks and touches */
+    filter: grayscale(100%);
+    transition: all 0.3s ease;
+}
+
+/* Update OTP Box placeholder color */
+.otp-box::placeholder {
+    color: #ccc;
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
