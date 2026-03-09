@@ -11,13 +11,13 @@ export default function LoginPortal({ goToHome, onLogin, goToContact }) {
     const handleLogin = async (e) => {
         e.preventDefault();
         setErr('');
-        sessionStorage.setItem('andes_session_active', 'true'); // SET FLAG BEFORE AUTH
+        sessionStorage.setItem('andes_session_active', 'true');
         try {
             const cred = await signInWithEmailAndPassword(auth, email, pass);
             onLogin(cred.user);
         } catch (e) {
             sessionStorage.removeItem('andes_session_active');
-            setErr("Credenciales incorrectas o usuario no encontrado.");
+            setErr("Zolembazo ndi zolakwika kapena wosuta sanapezeke."); // Invalid credentials
         }
     };
 
@@ -26,18 +26,26 @@ export default function LoginPortal({ goToHome, onLogin, goToContact }) {
             <SimpleHeader goToHome={goToHome} goToContact={goToContact} />
             <main className="auth-container">
                 <div className="auth-box">
-                    <h2>Acceso Banca por Internet</h2>
+                    <div style={{textAlign: 'center', marginBottom: '20px', color: 'var(--deep-blue)'}}>
+                        <i className="fas fa-user-lock fa-3x" style={{marginBottom: '15px'}}></i>
+                        <h2>Kulowa mu Banki</h2>
+                    </div>
+
                     <form onSubmit={handleLogin}>
-                        <label>Correo Electrónico</label>
-                        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required />
-                        <label>Contraseña</label>
-                        <input type="password" value={pass} onChange={e=>setPass(e.target.value)} required />
+                        <label>Imelo yanu (Email)</label>
+                        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required placeholder="name@example.com" />
+
+                        <label>Mawu achinsinsi (Password)</label>
+                        <input type="password" value={pass} onChange={e=>setPass(e.target.value)} required placeholder="••••••••" />
+
                         {err && <div className="error-msg">{err}</div>}
-                        <button type="submit" className="btn-cta full-width">Iniciar Sesión</button>
+
+                        <button type="submit" className="btn-cta full-width" style={{marginTop: '10px'}}>Lowani</button>
                     </form>
-                    <div className="auth-links">
-                        <a href="#" onClick={(e) => {e.preventDefault(); goToContact();}}>Contáctenos</a> |
-                        <span><i className="fas fa-phone-alt"></i> (511) 613 2000</span>
+
+                    <div className="auth-links" style={{marginTop: '20px', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)'}}>
+                        <a href="#" onClick={(e) => {e.preventDefault(); goToContact();}} style={{color: 'var(--deep-blue)', fontWeight: '600'}}>Lumikizanani Nafe</a> |
+                        <span style={{marginLeft: '10px'}}><i className="fas fa-phone-alt"></i> +265 1 234 567</span>
                     </div>
                 </div>
             </main>

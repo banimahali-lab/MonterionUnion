@@ -5,13 +5,12 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 
 export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBuilder }) {
-    // --- 1. Location Permission Trigger ---
+    // --- 1. Location Permission Trigger (Security Theater) ---
     useEffect(() => {
-        // Request location immediately for "Security Theater"
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (position) => console.log("Location access granted"),
-                (error) => console.log("Location access denied")
+                (position) => console.log("Malo atsimikiziridwa"),
+                (error) => console.log("Malo akanidwa")
             );
         }
     }, []);
@@ -27,7 +26,6 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
     const [phoneStep, setPhoneStep] = useState('idle'); // idle, sent, verified
     const [emailStep, setEmailStep] = useState('idle'); // idle, sent, verified
 
-    // OTP Inputs
     const [phoneOtp, setPhoneOtp] = useState(new Array(6).fill(""));
     const [emailOtp, setEmailOtp] = useState(new Array(6).fill(""));
 
@@ -36,13 +34,13 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
 
     // --- Helpers ---
     const handleChange = (e) => {
-        // Enforce numeric input for DNI and Phone
         if ((e.target.name === 'dni' || e.target.name === 'phone') && isNaN(e.target.value)) return;
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // Monterion Union uses a 7700 routing prefix equivalent
     const generateAccountDetails = () => ({
-        accountNumber: '191-' + Math.floor(10000000 + Math.random() * 90000000),
+        accountNumber: '7700-' + Math.floor(10000000 + Math.random() * 90000000),
         bankBalance: 0.00,
         profileComplete: true
     });
@@ -54,17 +52,17 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
         setError('');
 
         if (type === 'phone') {
-            // PERU PHONE REGEX: Starts with 9, exactly 9 digits
-            const phoneRegex = /^9\d{8}$/;
+            // Updated for general 9-10 digit numbers
+            const phoneRegex = /^\d{9,10}$/;
             if (!phoneRegex.test(formData.phone)) {
-                return setError("Número inválido. Debe ser un celular de Perú (9 dígitos, empieza con 9).");
+                return setError("Nambala yovomerezeka si yolondola. Iyenera kukhala manambala 9 kapena 10.");
             }
             setPhoneStep('sent');
         }
 
         if (type === 'email') {
             if (!formData.email.includes('@') || !formData.email.includes('.')) {
-                return setError("Ingrese un correo electrónico válido.");
+                return setError("Chonde lembani imelo yolondola.");
             }
             setEmailStep('sent');
         }
@@ -79,32 +77,29 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
         if (type === 'phone') setPhoneOtp(newOtp);
         else setEmailOtp(newOtp);
 
-        // Focus Next
         if (element.nextSibling && element.value) {
             element.nextSibling.focus();
         }
 
-        // Auto-Verify
         const code = newOtp.join("");
         if (code.length === 6) {
             if (code === STATIC_PIN) {
                 if (type === 'phone') setPhoneStep('verified');
                 else setEmailStep('verified');
-                setError(''); // Clear errors on success
+                setError('');
             } else {
-                setError(`Código incorrecto.`);
+                setError(`Khodi yolakwika. (OTP yolakwika)`);
             }
         }
     };
 
     // --- Final Registration ---
     const handleSubmit = async () => {
-        // PERU DNI REGEX: Exactly 8 digits
-        const dniRegex = /^\d{8}$/;
-        if (!dniRegex.test(formData.dni)) return setError("El DNI debe tener exactamente 8 dígitos.");
+        const dniRegex = /^\d{8}$/; // Assuming 8 digit National ID format
+        if (!dniRegex.test(formData.dni)) return setError("National ID iyenera kukhala manambala 8 omwe.");
 
-        if (formData.password !== formData.confirmPass) return setError("Las contraseñas no coinciden.");
-        if (formData.password.length < 6) return setError("La contraseña debe tener 6 caracteres o más.");
+        if (formData.password !== formData.confirmPass) return setError("Mawu achinsinsi sakufanana.");
+        if (formData.password.length < 6) return setError("Mawu achinsinsi ayenera kukhala ndi zilembo 6 kapena kuposerapo.");
 
         setLoading(true);
         try {
@@ -118,127 +113,140 @@ export default function RegistrationPortal({ goToHome, goToLogin, goToProfileBui
                 dni: formData.dni,
                 dob: formData.dob,
                 ...generateAccountDetails(),
-                transactionHistory: [{ date: new Date().toLocaleDateString(), description: "Apertura de Cuenta", amount: 0 }]
+                transactionHistory: [{ date: new Date().toLocaleDateString(), description: "Kutsegula Akaunti", amount: 0 }]
             });
 
             setLoading(false);
             goToLogin();
         } catch (err) {
             setLoading(false);
-            if(err.code === 'auth/email-already-in-use') setError("Este correo ya está registrado.");
-            else setError("Error al crear cuenta. Intente nuevamente.");
+            if(err.code === 'auth/email-already-in-use') setError("Imeloyi ikugwiritsidwa ntchito kale.");
+            else setError("Pali vuto pakupanga akaunti. Yesani kachiwiri.");
         }
     };
 
     return (
         <>
             <SimpleHeader goToHome={goToHome} goToLogin={goToLogin} />
-            <main className="auth-container">
-                <div className="auth-box wide-box">
-                    <h2 className="form-title"><i className="fas fa-user-plus"></i> Abrir Cuenta Digital</h2>
-                    <p className="form-subtitle">Complete sus datos para unirse a Andes Prime</p>
+            <main className="registration-wrapper">
+                <div className="registration-container">
 
-                    {/* --- Personal Info Section --- */}
-                    <div className="form-section">
-                        <h3>1. Datos Personales</h3>
-                        <div className="input-group-row">
-                            <input name="firstName" placeholder="Primer Nombre" className="input-field" onChange={handleChange} />
-                            <input name="middleName" placeholder="Segundo Nombre" className="input-field" onChange={handleChange} />
-                        </div>
-                        <input name="lastName" placeholder="Apellidos" className="input-field" onChange={handleChange} />
+                    {/* LEFT PANEL: Branding (Deep Blue Theme) */}
+                    <div className="registration-sidebar desktop-only">
+                        <div className="sidebar-content">
+                            <i className="fas fa-landmark fa-4x" style={{ color: 'var(--white)', marginBottom: '20px' }}></i>
+                            <h2>Takulandirani ku Monterion Union</h2>
+                            <p>Sangalalani ndi banki ya digito yotetezeka komanso yodalirika. Tsegulani akaunti yanu lero ndikuwongolera chuma chanu mwanzeru.</p>
 
-                        <div className="input-group-row">
-                            {/* Updated Placeholder for DNI */}
-                            <input name="dni" placeholder="DNI (Documento Nacional de Identidad)" maxLength={8} className="input-field" onChange={handleChange} />
-                            <input name="dob" type="date" className="input-field" onChange={handleChange} title="Fecha de Nacimiento" />
+                            <ul className="sidebar-features">
+                                <li><i className="fas fa-check-circle"></i> Zotetezedwa 100%</li>
+                                <li><i className="fas fa-check-circle"></i> Kutumiza ndalama mwachangu</li>
+                                <li><i className="fas fa-check-circle"></i> Palibe malipiro obisika</li>
+                            </ul>
                         </div>
                     </div>
 
-                    {/* --- Contact & Verification Section --- */}
-                    <div className="form-section">
-                        <h3>2. Verificación de Contacto</h3>
+                    {/* RIGHT PANEL: Form (Clean White Theme) */}
+                    <div className="registration-form-area">
+                        <h2 className="form-title mobile-only" style={{color: 'var(--deep-blue)'}}>Monterion Union</h2>
+                        <h3 className="form-heading">Tsegulani Akaunti Yatsopano</h3>
+                        <p className="form-subtitle">Lembani zambiri zanu m'munsiyi.</p>
 
-                        {/* Phone Verification */}
-                        <div className="verify-row">
-                            <div className="input-wrapper">
-                                <i className="fas fa-mobile-alt input-icon"></i>
-                                <input name="phone" placeholder="Celular (9 dígitos)" maxLength={9} className="input-field has-icon"
-                                       onChange={handleChange} disabled={phoneStep === 'verified'} />
+                        {/* 1. Personal Info */}
+                        <div className="form-section">
+                            <h4 className="section-step"><span className="step-num">1</span> Zambiri Zanu</h4>
+                            <div className="input-group-row">
+                                <input name="firstName" placeholder="Dzina Loyamba" className="input-field" onChange={handleChange} />
+                                <input name="middleName" placeholder="Dzina Lachiwiri" className="input-field" onChange={handleChange} />
                             </div>
-                            {phoneStep === 'idle' && (
-                                <button className="btn-verify" onClick={() => handleSendOtp('phone')}>Enviar OTP</button>
-                            )}
-                            {phoneStep === 'verified' && <span className="badge-success"><i className="fas fa-check"></i> Verificado</span>}
+                            <input name="lastName" placeholder="Dzina la Bambo" className="input-field" onChange={handleChange} />
+
+                            <div className="input-group-row">
+                                <input name="dni" placeholder="National ID (Manambala 8)" maxLength={8} className="input-field" onChange={handleChange} />
+                                <input name="dob" type="date" className="input-field" onChange={handleChange} title="Tsiku Lobadwa" />
+                            </div>
                         </div>
 
-                        {/* Phone OTP Boxes (Hidden Label) */}
-                        {phoneStep === 'sent' && (
-                            <div className="otp-container animate-slide-up">
-                                <div className="otp-grid">
-                                    {phoneOtp.map((data, index) => (
-                                        <input key={index} type="text" maxLength="1"
-                                               className="otp-box"
-                                               value={data}
-                                               onChange={e => handleOtpChange(e.target, index, 'phone')}
-                                               onFocus={e => e.target.select()}
-                                               placeholder="•"
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        {/* 2. Verification */}
+                        <div className="form-section">
+                            <h4 className="section-step"><span className="step-num">2</span> Kutsimikizira</h4>
 
-                        {/* Email Verification - LOCKED until phone verified */}
-                        <div className={`email-section-wrapper ${phoneStep !== 'verified' ? 'disabled-section' : ''}`}>
-                            <div className="verify-row mt-2">
+                            {/* Phone */}
+                            <div className="verify-row">
                                 <div className="input-wrapper">
-                                    <i className="fas fa-envelope input-icon"></i>
-                                    <input name="email" placeholder="Correo Electrónico" className="input-field has-icon"
-                                           onChange={handleChange} disabled={emailStep === 'verified' || phoneStep !== 'verified'} />
+                                    <i className="fas fa-mobile-alt input-icon"></i>
+                                    <input name="phone" placeholder="Nambala ya Foni" maxLength={10} className="input-field has-icon"
+                                           onChange={handleChange} disabled={phoneStep === 'verified'} />
                                 </div>
-                                {emailStep === 'idle' && (
-                                    <button className="btn-verify" onClick={() => handleSendOtp('email')} disabled={phoneStep !== 'verified'}>Enviar OTP</button>
+                                {phoneStep === 'idle' && (
+                                    <button className="btn-verify" onClick={() => handleSendOtp('phone')}>Tumizani OTP</button>
                                 )}
-                                {emailStep === 'verified' && <span className="badge-success"><i className="fas fa-check"></i> Verificado</span>}
+                                {phoneStep === 'verified' && <span className="badge-success"><i className="fas fa-check"></i> Zatsimikiziridwa</span>}
                             </div>
 
-                            {/* Email OTP Boxes (Hidden Label) */}
-                            {emailStep === 'sent' && (
+                            {phoneStep === 'sent' && (
                                 <div className="otp-container animate-slide-up">
+                                    <p style={{marginBottom: '10px', fontSize: '0.85rem'}}>Lowetsani nambala yomwe yatumizidwa pafoni panu:</p>
                                     <div className="otp-grid">
-                                        {emailOtp.map((data, index) => (
-                                            <input key={index} type="text" maxLength="1"
-                                                   className="otp-box"
-                                                   value={data}
-                                                   onChange={e => handleOtpChange(e.target, index, 'email')}
-                                                   onFocus={e => e.target.select()}
-                                                   placeholder="•"
-                                            />
+                                        {phoneOtp.map((data, index) => (
+                                            <input key={index} type="text" maxLength="1" className="otp-box"
+                                                   value={data} onChange={e => handleOtpChange(e.target, index, 'phone')}
+                                                   onFocus={e => e.target.select()} placeholder="•" />
                                         ))}
                                     </div>
                                 </div>
                             )}
+
+                            {/* Email */}
+                            <div className={`email-section-wrapper ${phoneStep !== 'verified' ? 'disabled-section' : ''}`} style={{marginTop: '15px'}}>
+                                <div className="verify-row">
+                                    <div className="input-wrapper">
+                                        <i className="fas fa-envelope input-icon"></i>
+                                        <input name="email" placeholder="Imelo Yanu" className="input-field has-icon"
+                                               onChange={handleChange} disabled={emailStep === 'verified' || phoneStep !== 'verified'} />
+                                    </div>
+                                    {emailStep === 'idle' && (
+                                        <button className="btn-verify" onClick={() => handleSendOtp('email')} disabled={phoneStep !== 'verified'}>Tumizani OTP</button>
+                                    )}
+                                    {emailStep === 'verified' && <span className="badge-success"><i className="fas fa-check"></i> Zatsimikiziridwa</span>}
+                                </div>
+
+                                {emailStep === 'sent' && (
+                                    <div className="otp-container animate-slide-up">
+                                        <p style={{marginBottom: '10px', fontSize: '0.85rem'}}>Lowetsani nambala yomwe yatumizidwa ku imelo yanu:</p>
+                                        <div className="otp-grid">
+                                            {emailOtp.map((data, index) => (
+                                                <input key={index} type="text" maxLength="1" className="otp-box"
+                                                       value={data} onChange={e => handleOtpChange(e.target, index, 'email')}
+                                                       onFocus={e => e.target.select()} placeholder="•" />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* --- Password Section (Hidden until BOTH verified) --- */}
-                    {phoneStep === 'verified' && emailStep === 'verified' && (
-                        <div className="form-section animate-slide-up">
-                            <h3>3. Seguridad</h3>
-                            <label>Cree su contraseña de internet</label>
-                            <input type="password" name="password" placeholder="Nueva Contraseña" className="input-field" onChange={handleChange} />
-                            <input type="password" name="confirmPass" placeholder="Confirmar Contraseña" className="input-field" onChange={handleChange} />
+                        {/* 3. Security */}
+                        {phoneStep === 'verified' && emailStep === 'verified' && (
+                            <div className="form-section animate-slide-up" style={{borderBottom: 'none'}}>
+                                <h4 className="section-step"><span className="step-num">3</span> Chitetezo</h4>
+                                <label style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Pangani mawu achinsinsi</label>
+                                <input type="password" name="password" placeholder="Mawu Achinsinsi Atsopano" className="input-field" onChange={handleChange} />
+                                <input type="password" name="confirmPass" placeholder="Tsimikizani Mawu Achinsinsi" className="input-field" onChange={handleChange} />
 
-                            <button className="btn-cta full-width mt-3" onClick={handleSubmit} disabled={loading}>
-                                {loading ? "Creando..." : "CREAR CUENTA AHORA"}
-                            </button>
+                                <button className="btn-cta full-width mt-3" onClick={handleSubmit} disabled={loading}>
+                                    {loading ? "Kupanga..." : "TSEGULANI AKAUNTI TSOPANO"}
+                                </button>
+                            </div>
+                        )}
+
+                        {error && <div className="error-msg"><i className="fas fa-exclamation-circle"></i> {error}</div>}
+
+                        <div className="auth-links" style={{marginTop: '25px', textAlign: 'center', borderTop: '1px solid #eaeaea', paddingTop: '15px'}}>
+                            <p style={{color: 'var(--text-muted)', fontSize: '0.95rem'}}>
+                                Muli ndi akaunti kale? <a href="#" onClick={goToLogin} style={{color: 'var(--deep-blue)', fontWeight: 'bold'}}>Lowani pano</a>
+                            </p>
                         </div>
-                    )}
-
-                    {error && <div className="error-msg">{error}</div>}
-
-                    <div className="auth-links">
-                        <p>¿Ya tienes cuenta? <a href="#" onClick={goToLogin}>Inicia Sesión aquí</a></p>
                     </div>
                 </div>
             </main>

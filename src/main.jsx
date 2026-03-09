@@ -47,16 +47,6 @@ function MainRouter() {
     };
 
     useEffect(() => {
-        // --- LOGOUT ON REFRESH LOGIC ---
-        // Check if the page was loaded via a "Reload" action
-        const entries = performance.getEntriesByType("navigation");
-        if (entries.length > 0 && entries[0].type === 'reload') {
-            console.log("Reload detected - Force Logout");
-            signOut(auth);
-            setIsLoading(false);
-            return;
-        }
-
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setIsLoading(true);
 
