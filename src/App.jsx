@@ -55,7 +55,7 @@ export const SimpleFooter = () => {
                     </div>
                     <div>
                         <h4>Lumikizanani</h4>
-                        <p><i className="fas fa-phone-alt"></i> +265 1 234 567</p>
+                        <p><i className="fas fa-phone-alt"></i> +265 1 897 457</p>
                         <p><i className="fas fa-map-marker-alt"></i> Lilongwe, Malawi</p>
                     </div>
                 </div>
